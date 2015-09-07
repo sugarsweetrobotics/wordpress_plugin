@@ -92,7 +92,31 @@ class Plugin(PluginFunction):
             sys.stdout.write(' - OK.\n')
         return all_posts
 
+    def check_rtc_term(self, wp, category):
+        from wordpress_xmlrpc.methods.taxonomies import GetTerms        
+        categories = wp.call(GetTerms('category'))
+        for c in categories:
+            if c.name == category:
+                sys.stdout.write('## Category %s matches.\n' % category)
+                return c
+        sys.stdout.write('## Category %s does not match.\n' % category)
+
+        id = 0
+        for c in categories:
+            if c.name == 'RTComponents':
+                id = c.id
+
+        from wordpress_xmlrpc.methods.taxonomies import NewTerm
+        from wordpress_xmlrpc import WordPressTerm
+        term = WordPressTerm()
+        term.name = category
+        term.taxonomy = 'category'
+        term.parent = id
         
+        cat = wp.call(NewTerm(term))
+
+        return cat
+
     @manifest 
     def upload(self, argv):
         """ Update Wordpress Site """
@@ -108,8 +132,6 @@ class Plugin(PluginFunction):
         package = admin.package.get_package_from_path(os.getcwd(), verbose=verbose)
         rtc = admin.rtc.get_rtc_from_package(package, rtc_name, verbose=verbose)
 
-            
-
 
         setting_filename = 'setting.txt'
         
@@ -123,10 +145,12 @@ class Plugin(PluginFunction):
 
         if post_id < 0:
             sys.stdout.write('## Error. Can not find post.\n')
-            return -1
+
 
         wp = self._initialize(setting_filename, verbose=verbose)
         from wordpress_xmlrpc.methods.posts import GetPost
+
+        cat = self.check_rtc_term(wp, rtc.rtcprofile.basicInfo.category)            
 
         if upImage:
             image = mgr.rtcprofile.get_image(rtc.rtcprofile)
@@ -137,7 +161,11 @@ class Plugin(PluginFunction):
             image_info = None
 
         html = mgr.rtcprofile.get_html(rtc)
-        old_post = wp.call(GetPost(post_id))
+        if post_id < 0:
+            old_post = None
+        else:
+            old_post = wp.call(GetPost(post_id))
+
         if old_post:
             html = self.copy_build_status(old_post.content, html)
         
@@ -153,6 +181,9 @@ build_in_osx_tag = '<h3>Build in OSX</h3>'
 build_in_linux_tag = '<h3>Build in Linux</h3>'
 all_posts = []    
 
+
+
+    
 
 def load_setting(setting_filename, verbose=False):
     import yaml
@@ -289,7 +320,7 @@ def upload_text(wp, repo_name, rtcprof, html, img_info = None, test=False, build
         post.content = apply_language_setting(html)
         post.terms_names = {
             'post_tag': [rtcprof.name, 'RTC'],
-            'category': ['RTComponents']
+            'category': ['RTComponents', rtcprof.basicInfo.category]
             }
         post.slug = rtcprof.name
         n = datetime.datetime.now()
@@ -335,8 +366,9 @@ def post(wp, old_post, title, content, rtcprof, img_info):
     post.content = content
     post.terms_names = {
         'post_tag': [rtcprof.name, 'RTC'],
-        'category': ['RTComponents']
+        'category': ['RTComponents', rtcprof.basicInfo.category]
         }
+
     post.slug = rtcprof.name
     n = datetime.datetime.now()
     day = n.day
