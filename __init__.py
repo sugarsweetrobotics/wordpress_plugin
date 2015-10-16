@@ -10,7 +10,7 @@ class Plugin(PluginFunction):
         pass
 
     def depends(self):
-        return ['admin.environment', 'admin.rtc', 'admin.package', 'mgr.repository', 'mgr.rtcprofile']
+        return ['admin.environment', 'admin.rtc', 'admin.package', 'mgr.repository', 'mgr.rtcprofile', 'mgr.imaging']
 
     @manifest
     def update(self, argv):
@@ -153,7 +153,7 @@ class Plugin(PluginFunction):
         cat = self.check_rtc_term(wp, rtc.rtcprofile.basicInfo.category)            
 
         if upImage:
-            image = mgr.rtcprofile.get_image(rtc.rtcprofile)
+            image = mgr.imaging.get_image(rtc.rtcprofile)
             filename = rtc.rtcprofile.basicInfo.name + '.jpg'
             image_path = save_image(image, filename)
             image_info  = upload_image(wp, image_path)
