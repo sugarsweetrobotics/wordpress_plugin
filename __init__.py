@@ -324,12 +324,26 @@ def upload_text(wp, repo_name, rtcprof, html, img_info = None, test=False, build
             }
         post.slug = rtcprof.name
         n = datetime.datetime.now()
+        year = n.year
+        month = n.month
         day = n.day
         hour = n.hour
         if n.hour < 9:
-            day = day -1
+            day = day - 1
             hour = hour + 24 
-        post.date = datetime.datetime(n.year, n.month, day, hour-9, n.minute, n.second)
+            if day == 0:
+                month = month - 1
+                if month == 0:
+                    month = 12
+                    year = year -1
+                if month in [4, 6, 9, 11]:
+                    day = 30
+                elif month == 2:
+                    day = 28
+                else:
+                    day = 31
+        hour = hour - 9                
+        post.date = datetime.datetime(year, month, day, hour, n.minute, n.second)
         post.post_status = 'publish'
         post.thumbnail = img_info['id']
         post.id = wp.call(NewPost(post))
@@ -344,12 +358,26 @@ def upload_text(wp, repo_name, rtcprof, html, img_info = None, test=False, build
             }
         post.slug = rtcprof.name
         n = datetime.datetime.now()
+        year = n.year
+        month = n.month
         day = n.day
         hour = n.hour
         if n.hour < 9:
-            day = day -1
-            hour = hour + 24 
-        post.date = datetime.datetime(n.year, n.month, day, hour-9, n.minute, n.second)
+            day = day - 1
+            hour = hour + 24
+            if day == 0:
+                month = month - 1
+                if month == 0:
+                    month = 12
+                    year = year -1
+                if month in [4, 6, 9, 11]:
+                    day = 30
+                elif month == 2:
+                    day = 28
+                else:
+                    day = 31
+        hour = hour - 9
+        post.date = datetime.datetime(year, month, day, hour, n.minute, n.second)
         post.post_status = 'publish'
         post.thumbnail = img_info['id']
         wp.call(posts.EditPost(post.id, post))
@@ -371,12 +399,26 @@ def post(wp, old_post, title, content, rtcprof, img_info):
 
     post.slug = rtcprof.name
     n = datetime.datetime.now()
+    year = n.year
+    month = n.month
     day = n.day
     hour = n.hour
     if n.hour < 9:
-        day = day -1
-        hour = hour + 24 
-    post.date = datetime.datetime(n.year, n.month, day, hour-9, n.minute, n.second)
+        day = day - 1
+        hour = hour + 24
+        if day == 0:
+            month = month - 1
+            if month == 0:
+                month = 12
+                year = year -1
+            if month in [4, 6, 9, 11]:
+                day = 30
+            elif month == 2:
+                day = 28
+            else:
+                day = 31
+    hour = hour - 9
+    post.date = datetime.datetime(year, month, day, hour, n.minute, n.second)
     post.post_status = 'publish'
     if img_info:
         post.thumbnail = img_info['id']
